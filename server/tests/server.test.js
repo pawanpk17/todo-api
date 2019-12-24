@@ -6,7 +6,8 @@ const {Todo} = require('./../models/todo');
 const {User} = require('./../models/user');
 
 beforeEach((done) => {
-    Todo.remove({}).then(() => done());
+    Todo.deleteMany({}).then(() =>
+        User.deleteMany({})).then(() => done());
   });
 
 describe('POST /todo', function() {
@@ -43,6 +44,51 @@ describe('POST /todo', function() {
 
                 Todo.find().then((todos) => {
                     expect(todos.length).toBe(0);
+                    done();
+                }).catch((e) => {
+                    done(e);
+                });
+            });
+    });
+});
+
+
+describe('POST /user', function() {
+
+    it('should create a new user in Users collection', (done) => {
+        var testEmail = 'test email';
+        request(app)
+            .post('/users')
+            .send({email : testEmail})
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.email).toBe(testEmail);
+            })
+            .end((err, res) => {
+                if(err)
+                    return done(err);
+
+                User.find().then((users) => {
+                    expect(users.length).toBe(1);
+                    expect(users[0].email).toBe(testEmail);
+                    done();
+                }).catch((e) => { 
+                    done(e);
+                 });
+            });
+    });
+
+    it('should not create a user with empty data', (done) => {
+        request(app)
+            .post('/users')
+            .send({})
+            .expect(400)
+            .end((err, res) => {
+                if(err)
+                    return done(err);
+                
+                User.find().then((users) => {
+                    expect(users.length).toBe(0);
                     done();
                 }).catch((e) => {
                     done(e);
