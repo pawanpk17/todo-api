@@ -5,9 +5,30 @@ const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 const {User} = require('./../models/user');
 
+const todos = [{
+    'text' : 'First test todo'
+}, {
+    'text' : 'Second test todo'
+}];
+
+const users = [{
+    'email' : 'First test user email'
+}, {
+    'email' : 'Second test user email'
+}];
+
 beforeEach((done) => {
-    Todo.deleteMany({}).then(() =>
-        User.deleteMany({})).then(() => done());
+    Todo.deleteMany({})
+        .then(() => {
+            return Todo.insertMany(todos)
+        })
+        .then(() => {
+            return User.deleteMany({})
+        })
+        .then(() => {
+            return User.insertMany(users)
+        })
+        .then(() => done());
   });
 
 describe('POST /todo', function() {
@@ -25,7 +46,7 @@ describe('POST /todo', function() {
                 if(err)
                     return done(err);
                 
-                Todo.find().then((todos) => {
+                Todo.find({text}).then((todos) => {
                     expect(todos.length).toBe(1);
                     expect(todos[0].text).toBe(text);
                     done();
@@ -43,7 +64,7 @@ describe('POST /todo', function() {
                     return done(err);
 
                 Todo.find().then((todos) => {
-                    expect(todos.length).toBe(0);
+                    expect(todos.length).toBe(2);
                     done();
                 }).catch((e) => {
                     done(e);
@@ -51,7 +72,6 @@ describe('POST /todo', function() {
             });
     });
 });
-
 
 describe('POST /user', function() {
 
@@ -68,7 +88,7 @@ describe('POST /user', function() {
                 if(err)
                     return done(err);
 
-                User.find().then((users) => {
+                User.find({testEmail}).then((users) => {
                     expect(users.length).toBe(1);
                     expect(users[0].email).toBe(testEmail);
                     done();
@@ -88,11 +108,35 @@ describe('POST /user', function() {
                     return done(err);
                 
                 User.find().then((users) => {
-                    expect(users.length).toBe(0);
+                    expect(users.length).toBe(2);
                     done();
                 }).catch((e) => {
                     done(e);
                 });
             });
+    });
+});
+
+describe('GET /todos', function() {
+    it('should read all the todos', (done) => {
+        request(app)
+            .get('/todos')
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todos.length).toBeGreaterThanOrEqual(1);
+            })
+            .end(done); 
+    });
+});
+
+describe('GET /users', function() {
+    it('should read all the users', (done) => {
+        request(app)
+            .get('/users')
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.users.length).toBeGreaterThanOrEqual(1);
+            })
+            .end(done); 
     });
 });
