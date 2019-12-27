@@ -1,13 +1,15 @@
 const expect = require('expect');
 const request = require('supertest');
-
+const {ObjectID} = require('mongodb');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 const {User} = require('./../models/user');
 
 const todos = [{
+    _id : new ObjectID(),
     'text' : 'First test todo'
 }, {
+    _id : new ObjectID(),
     'text' : 'Second test todo'
 }];
 
@@ -16,6 +18,7 @@ const users = [{
 }, {
     'email' : 'Second test user email'
 }];
+
 
 beforeEach((done) => {
     Todo.deleteMany({})
@@ -31,7 +34,7 @@ beforeEach((done) => {
         .then(() => done());
   });
 
-describe('POST /todo', function() {
+describe('POST /todo', () => {
     it('should post a new todo', (done) => {
         var text = "test todo data"
 
@@ -73,7 +76,7 @@ describe('POST /todo', function() {
     });
 });
 
-describe('POST /user', function() {
+describe('POST /user', () => {
 
     it('should create a new user in Users collection', (done) => {
         var testEmail = 'test email';
@@ -117,7 +120,7 @@ describe('POST /user', function() {
     });
 });
 
-describe('GET /todos', function() {
+describe('GET /todos', () => {
     it('should read all the todos', (done) => {
         request(app)
             .get('/todos')
@@ -129,7 +132,7 @@ describe('GET /todos', function() {
     });
 });
 
-describe('GET /users', function() {
+describe('GET /users', () => {
     it('should read all the users', (done) => {
         request(app)
             .get('/users')
@@ -138,5 +141,17 @@ describe('GET /users', function() {
                 expect(res.body.users.length).toBeGreaterThanOrEqual(1);
             })
             .end(done); 
+    });
+});
+
+describe('GET /todos/:id', () => {
+    it('should return a todo doc', (done) => {
+        request(app)
+            .get(`/todos/${todos[0]._id.toHexString()}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[0].text)
+            })
+            .end(done);
     });
 });
